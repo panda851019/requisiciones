@@ -367,55 +367,11 @@ jQuery(document).ready(function () {
                 });
             },
             error: function(respuesta) {
-                Swal.fire('Contacto en DGRMSG','<strong>Email:</strong> requisiciones@finanzas.cdmx.gob.mx <br><strong>Tel:</strong> 53458000 ext. 1234','success');
-
-            }
-        });
-    });
-        $("#aviso").on('click',function(t){
-        $.ajax({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            url: url +  'home/aviso',
-            dataType: 'html',
-            success: function(resp_success) {
-                var modal = resp_success;
-                $(modal).modal().on('shown.bs.modal', function() {
-
-                }).on('hidden.bs.modal', function() {
-                    $(this).remove();
-                });
-            },
-            error: function(respuesta) {
-                const swalWithBootstrapButtons = Swal.mixin({
-				  customClass: {
-				    confirmButton: 'btn btn-success',
-				    cancelButton: 'btn btn-danger'
-				  },
-				  buttonsStyling: false
-				})
-
-				swalWithBootstrapButtons.fire({
-					width: '800px',
-				  title: 'Aviso de Privacidad',
-				  html: '<hr color="#00b140"><br><p style="text-align:justify"><span style="font-family:Arial,Helvetica,sans-serif"><span style="font-size:14px">Sus datos personales recabados a través de declaraciones y demás manifestaciones hechas por medios electrónicos son incorporados, protegidos y tratados en el Sistema de Administración de Contribuciones, los cuales tienen su fundamento en los artículos 56y 307 bis, del Código Fiscal de la Ciudad de México, con la finalidad de llevar a cabo el registro y control de los ingresos que se recaudan, para realizar el seguimiento y/o determinación del cumplimiento de la obligaciones fiscales de los contribuyentes, para la resolución de sus trámites o promociones, mediante el registro de la información proporcionada por el contribuyente, y podrán ser transmitidos de conformidad con lo previsto en la Ley de Protección de Datos Personales en Posesión de Sujetos Obligados de la Ciudad de México.simismo, se le informa que sus datos no podrán ser difundidos sin su consentimiento expreso,salvo las excepciones previstas en la Ley, de conformidad con los artículos 102 del Código Fiscal de la Ciudad de México y 64 de la Ley de Protección de Datos Personales en Posesión de Sujetos Obligados de la Ciudad de México.',
-				  icon: 'warning',
-				  showCancelButton: false,
-				  confirmButtonText: 'Aceptar',
-				  
-				  reverseButtons: true
-				}).then((result) => {
-				 {
-
-				  }
-				})
+                Swal.fire('¡Alerta!','Error de conectividad de red USR-03','warning');
             }
         });
     });
 });
-
-
 
 /**
  *

@@ -14,7 +14,7 @@
 
          <div class="kt-footer__menu">
              <a href="javascript:void(0)" id="termCond" class="kt-footer__menu-link kt-link">Acerca de</a>
-             <a href="javascript:void(0)" id="aviso" class="kt-footer__menu-link kt-link">Aviso de Privacidad</a>
+             <a href="javascript:void(0)" class="kt-footer__menu-link kt-link">Equipo</a>
              <a href="javascript:void(0)"id="contactos_dash"  class="kt-footer__menu-link kt-link">Contacto</a>
          </div>
      </div>

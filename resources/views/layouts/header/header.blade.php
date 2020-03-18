@@ -120,7 +120,7 @@
                 <div class="kt-header__topbar-user">
                     <span class="kt-header__topbar-welcome kt-hidden-mobile">Bienvenido,</span>
                     <span class="kt-header__topbar-username kt-hidden-mobile">{{ Auth::user()->usuario }} </span>
-
+                    <img class="" alt="Pic" id="img_avatar_header" src="{{env('APP_URL').'storage/app/'.Auth::user()->avatar}}">
                     <!--use below badge element instead the user avatar to display username's first letter(remove kt-hidden class to display it) -->
                     <span
                         class="kt-hidden kt-badge kt-badge--username kt-badge--unified-success kt-badge--lg kt-badge--rounded kt-badge--bold">S</span>
@@ -129,11 +129,25 @@
             <div
                 class="dropdown-menu dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-top-unround dropdown-menu-xl">
                 <!--begin: Head -->
-
+                <div class="kt-user-card kt-user-card--skin-dark kt-notification-item-padding-x"
+                    style="background-image: url({{ URL::asset('assets/media/misc/bg-1.jpg')}})">
+                    <div class="kt-user-card__avatar">
+                        <img class="" id="img_avatar_header_menu" alt="Pic" src="{{env('APP_URL').'storage/app/'.Auth::user()->avatar}}">
+                        <!--use below badge element instead the user avatar to display username's first letter(remove kt-hidden class to display it) -->
+                        <span
+                            class="kt-hidden kt-badge kt-badge--lg kt-badge--rounded kt-badge--bold kt-font-success">S</span>
+                    </div>
+                    <div class="kt-user-card__name">
+                        {{ Auth::user()->name.' '.Auth::user()->apellido_paterno  }}
+                    </div>
+                    <div class="kt-hidden kt-user-card__badge">
+                        <span class="btn btn-success btn-sm btn-bold btn-font-md">23 messages</span>
+                    </div>
+                </div>
                 <!--end: Head -->
                 <!--begin: Navigation -->
                 <div class="kt-notification">
-                    <!--<a href="{{url('users/profile')}}" class="kt-notification__item">
+                    <a href="{{url('users/profile')}}" class="kt-notification__item">
                         <div class="kt-notification__item-icon">
                             <i class="flaticon2-calendar-3 kt-font-success"></i>
                         </div>
@@ -145,11 +159,11 @@
                                 Configuración de la cuenta
                             </div>
                         </div>
-                    </a>-->
+                    </a>
 
                     <input type="hidden" id='nombre'name="nombre" value="{{Auth::user()->name}}">
                     <input type="hidden" id='avatar'name="avatar" value="{{Auth::user()->avatar}}">
-<!--
+
                     <a href="javascript:void(0);" onclick="bloquea_pantalla();" class="kt-notification__item">
                         <div class="kt-notification__item-icon">
                             <i class="flaticon2-lock kt-font-brand"></i>
@@ -163,7 +177,7 @@
                             </div>
                         </div>
                     </a>
-->
+
 
                     <!-- Para continuar con el listado del Perfil -->
                     <div class="kt-notification__custom kt-space-between">

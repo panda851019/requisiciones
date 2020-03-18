@@ -24,7 +24,21 @@ use Illuminate\Support\Facades\Storage;
 use Mail;
 use Session;
 
-class RequisicionesController extends Controller {
+/*class RequisicionesController extends Controller {
+		public function captureReq() {
+		$sesDep = Session::get('depD');
+
+		$unidadM = UnidadMedida::select('id', 'descripcion')
+			->orderBy('descripcion', 'asc')->get()->toArray();
+
+		$almacenes = Almacenes::select('id', 'calle', 'colonia')
+			->where('dependencia', $sesDep)
+			->orderBy('calle', 'asc')
+		//->groupBy('id','calle', 'colonia')
+			->get()->toArray();
+		//dd($almacenes);
+		return view('requisiciones/createReq');
+	}*/
 	public function reqRegistrar() {
 		$sesDep = Session::get('depD');
 		//$cabmsGRP = CambsTotal::select('cabms','descripcion')
@@ -83,6 +97,12 @@ class RequisicionesController extends Controller {
 				->get()->toArray();
 			$userId = auth()->user();
 			//dd($noFol[0]['folio_req']);
+      if($request->hasFile('archivo')) {
+        $adjunto = 1;
+      }else{
+        $adjunto = 0;
+      }
+
 
 			if ($request->tipo_req == 1) {
 				$lugarEntrega = $request->almacen;
@@ -100,7 +120,8 @@ class RequisicionesController extends Controller {
 			$reqNew->par_pre = $request->par_pre;
 			$reqNew->observaciones = $request->observaciones;
 			$reqNew->lugar_entrega = $lugarEntrega;
-			$reqNew->monto_estimado = $request->monto_estimado;
+      $reqNew->monto_estimado = $request->monto_estimado;
+			$reqNew->adjunto = $adjunto;
 			$reqNew->status = 1;
 			$reqNew->save();
 
@@ -130,7 +151,6 @@ class RequisicionesController extends Controller {
 		$BienesNewsol->no_requisicion = $folRequest;
 		$BienesNewsol->id_cabmsgrp = $dato[0];
 		$BienesNewsol->cantidad = $request->cantidad;
-		$BienesNewsol->caracteristicas = $request->caracteristicas;
 		$BienesNewsol->status = 1;
 		$BienesNewsol->unidad = $request->u_medida;
 		$BienesNewsol->save();
@@ -146,7 +166,7 @@ class RequisicionesController extends Controller {
 		return response()->json($sol);
 	}
 	public function getMyReqAlm(Request $request) {
-		dd($request->all());
+
 		//->rightjoin('existencias','cat_cabmsgrp.clave_grp','=','existencias.id_cabmsgrp')
 		$userId = auth()->user();
 		$myReg = Requisiciones::select('requisiciones_bienes.id as idSolBien', 'requisiciones_bienes.id_cabmsgrp', 'cantidad', 'cat_cabmstotal.descripcion', 'cat_unidadalm.descripcion as descUnidad', 'fecha_requiere')
@@ -199,6 +219,7 @@ class RequisicionesController extends Controller {
 		return response()->json($myReg);
 	}
 	public function getMyReqFol(Request $request) {
+		//dd("rrr");
 
 		$userId = auth()->user();
 		//dd($userId);
@@ -225,8 +246,10 @@ class RequisicionesController extends Controller {
 			->where($campo, $oper, $filtro)
 			->where('requisiciones.status_req', 0)
 			->get()->toArray();
+			dd($myReg);
 		return response()->json($myReg);
 	}
+  
 	public function deleteReqBien($idSolBien) {
 		//dd($idBienes);
 		$resg = RequisicionesBienes::where('id', '=', $idSolBien)->first();
@@ -241,23 +264,21 @@ class RequisicionesController extends Controller {
 	}
 	//******* Tramitar Requisición ***********
 	public function reqTramitar(Request $request) {
-		//dd($request->all());
-		//dd(request('statusReq'));
-		if (request()->has('statusReq')) {
+		//dd($request);
 
+		if (request()->has('statusReq')) {
+			//dd(request('statusReq'));
 			$data = Requisiciones::select('no_requisicion', 'usersol.nombre as nombresol', 'fecha_elabora', 'usr_tramita', 'usr_solicita', 'usr_autorm', 'usr_autodf', 'fecha_requiere', 'fecha_tramita',
-				'userTram.nombre as nombreTram', 'status_req', 'adjunto', 'requisiciones.par_pre', 'tipo_req', 'cat_parpretotal.descripcion as descripcion_parpre', 'requisiciones.tipo_req')
-				->leftJoin('cat_parpretotal as cat_parpretotal', 'cat_parpretotal.par_pre', '=', 'requisiciones.par_pre')
+				'userTram.nombre as nombreTram', 'status_req', 'adjunto')
 				->leftJoin('users as usersol', 'requisiciones.usr_solicita', '=', 'usersol.id')
 				->leftJoin('users as userTram', 'requisiciones.usr_tramita', '=', 'userTram.id')
 				->where('status_req', request('statusReq'))
 			//->where('status_req',2)
 				->orderBy('no_requisicion', 'DESC')->paginate(10);
-			//dd($data);
+
 		} else {
 			$data = Requisiciones::select('no_requisicion', 'usersol.nombre as nombresol', 'fecha_elabora', 'usr_tramita', 'usr_solicita', 'usr_autorm', 'usr_autodf', 'fecha_requiere', 'fecha_tramita',
-				'userTram.nombre as nombreTram', 'status_req', 'adjunto', 'requisiciones.par_pre', 'tipo_req', 'cat_parpretotal.descripcion as descripcion_parpre', 'requisiciones.tipo_req')
-				->leftJoin('cat_parpretotal as cat_parpretotal', 'cat_parpretotal.par_pre', '=', 'requisiciones.par_pre')
+				'userTram.nombre as nombreTram', 'status_req', 'adjunto')
 				->leftJoin('users as usersol', 'requisiciones.usr_solicita', '=', 'usersol.id')
 				->leftJoin('users as userTram', 'requisiciones.usr_tramita', '=', 'userTram.id')
 				->whereIn('status_req', [1, 2])
@@ -287,12 +308,11 @@ class RequisicionesController extends Controller {
 	}
 	//******* Autorizar Requisición RM ***********
 	public function reqAutorizaRM(Request $request) {
-		//dd($request);
+		//dd($request,'hola');
 		if (request()->has('statusReq')) {
 
 			$data = Requisiciones::select('no_requisicion', 'usersol.nombre as nombresol', 'fecha_elabora', 'usr_tramita', 'usr_solicita', 'usr_autorm', 'usr_autodf', 'fecha_requiere', 'fecha_tramita',
-				'userTram.nombre as nombreTram', 'status_req', 'fecha_autorm', 'user_autoRM.nombre as nombre_autoRM', 'adjunto', 'requisiciones.par_pre', 'tipo_req', 'cat_parpretotal.descripcion as descripcion_parpre', 'requisiciones.tipo_req')
-				->leftJoin('cat_parpretotal as cat_parpretotal', 'cat_parpretotal.par_pre', '=', 'requisiciones.par_pre')
+				'userTram.nombre as nombreTram', 'status_req', 'fecha_autorm', 'user_autoRM.nombre as nombre_autoRM', 'adjunto')
 				->leftJoin('users as usersol', 'requisiciones.usr_solicita', '=', 'usersol.id')
 				->leftJoin('users as userTram', 'requisiciones.usr_tramita', '=', 'userTram.id')
 				->leftJoin('users as user_autoRM', 'requisiciones.usr_autorm', '=', 'user_autoRM.id')
@@ -302,8 +322,7 @@ class RequisicionesController extends Controller {
 
 		} else {
 			$data = Requisiciones::select('no_requisicion', 'usersol.nombre as nombresol', 'fecha_elabora', 'usr_tramita', 'usr_solicita', 'usr_autorm', 'usr_autodf', 'fecha_requiere', 'fecha_tramita',
-				'userTram.nombre as nombreTram', 'status_req', 'adjunto', 'requisiciones.par_pre', 'tipo_req', 'cat_parpretotal.descripcion as descripcion_parpre', 'requisiciones.tipo_req')
-				->leftJoin('cat_parpretotal as cat_parpretotal', 'cat_parpretotal.par_pre', '=', 'requisiciones.par_pre')
+				'userTram.nombre as nombreTram', 'status_req', 'adjunto')
 				->leftJoin('users as usersol', 'requisiciones.usr_solicita', '=', 'usersol.id')
 				->leftJoin('users as userTram', 'requisiciones.usr_tramita', '=', 'userTram.id')
 
@@ -314,14 +333,13 @@ class RequisicionesController extends Controller {
 		return view('requisiciones.reqAutorizaRM', compact('data', 'status_req'));
 	}
 	//******* Autorizar Requisición DGA ***********
-	public function reqAutorizaDGA(Request $request) {
+	public function reqAutorizaDGA() {
 		//dd(request());
 		if (request()->has('statusReq')) {
-			//$status_req = 3;
+			$status_req = 3;
 			$data = Requisiciones::select('no_requisicion', 'usersol.nombre as nombresol', 'fecha_elabora', 'usr_tramita', 'usr_solicita', 'usr_autorm', 'usr_autodf', 'fecha_requiere', 'fecha_tramita',
 				'userTram.nombre as nombreTram', 'status_req', 'fecha_autorm', 'user_autoRM.nombre as nombre_autoRM',
-				'user_autoDF.nombre as nombre_df', 'fecha_autodf', 'adjunto', 'requisiciones.par_pre', 'tipo_req', 'cat_parpretotal.descripcion as descripcion_parpre', 'requisiciones.tipo_req')
-				->leftJoin('cat_parpretotal as cat_parpretotal', 'cat_parpretotal.par_pre', '=', 'requisiciones.par_pre')
+				'user_autoDF.nombre as nombre_df', 'fecha_autodf', 'adjunto')
 				->leftJoin('users as usersol', 'requisiciones.usr_solicita', '=', 'usersol.id')
 				->leftJoin('users as userTram', 'requisiciones.usr_tramita', '=', 'userTram.id')
 				->leftJoin('users as user_autoRM', 'requisiciones.usr_autorm', '=', 'user_autoRM.id')
@@ -331,11 +349,10 @@ class RequisicionesController extends Controller {
 				->orderBy('no_requisicion', 'DESC')->paginate(10);
 			//dd($data[0]->status_req);
 
-		} elseif ($status_req = 4) {
-			//$status_req = 4;
+		} else {
+			$status_req = 4;
 			$data = Requisiciones::select('no_requisicion', 'usersol.nombre as nombresol', 'fecha_elabora', 'usr_tramita', 'usr_solicita', 'usr_autorm', 'usr_autodf', 'fecha_requiere', 'fecha_tramita',
-				'userTram.nombre as nombreTram', 'status_req', 'fecha_autorm', 'user_autoRM.nombre as nombre_autoRM', 'adjunto', 'requisiciones.par_pre', 'tipo_req', 'cat_parpretotal.descripcion as descripcion_parpre', 'requisiciones.tipo_req')
-				->leftJoin('cat_parpretotal as cat_parpretotal', 'cat_parpretotal.par_pre', '=', 'requisiciones.par_pre')
+				'userTram.nombre as nombreTram', 'status_req', 'fecha_autorm', 'user_autoRM.nombre as nombre_autoRM', 'adjunto')
 				->leftJoin('users as usersol', 'requisiciones.usr_solicita', '=', 'usersol.id')
 				->leftJoin('users as userTram', 'requisiciones.usr_tramita', '=', 'userTram.id')
 				->leftJoin('users as user_autoRM', 'requisiciones.usr_autorm', '=', 'user_autoRM.id')
@@ -343,20 +360,7 @@ class RequisicionesController extends Controller {
 			//->where('status_req',2)
 				->orderBy('no_requisicion', 'DESC')->paginate(10);
 
-		} else {
-			$status_req = 7;
-			$data = Requisiciones::select('no_requisicion', 'usersol.nombre as nombresol', 'fecha_elabora', 'usr_tramita', 'usr_solicita', 'usr_autorm', 'usr_autodf', 'fecha_requiere', 'fecha_tramita',
-				'userTram.nombre as nombreTram', 'status_req', 'fecha_autorm', 'user_autoRM.nombre as nombre_autoRM', 'adjunto', 'requisiciones.par_pre', 'tipo_req', 'cat_parpretotal.descripcion as descripcion_parpre', 'requisiciones.tipo_req')
-				->leftJoin('cat_parpretotal as cat_parpretotal', 'cat_parpretotal.par_pre', '=', 'requisiciones.par_pre')
-				->leftJoin('users as usersol', 'requisiciones.usr_solicita', '=', 'usersol.id')
-				->leftJoin('users as userTram', 'requisiciones.usr_tramita', '=', 'userTram.id')
-				->leftJoin('users as user_autoRM', 'requisiciones.usr_autorm', '=', 'user_autoRM.id')
-				->whereIn('status_req', [7])
-			//->where('status_req',2)
-				->orderBy('no_requisicion', 'DESC')->paginate(10);
-
 		}
-		$status_req = $request->statusReq;
 		//dd($data);
 
 		return view('requisiciones.reqAutorizaDGA', compact('data', 'status_req'));
@@ -397,14 +401,14 @@ class RequisicionesController extends Controller {
 			$mes_requiere = $fecha_requiere[1];
 			$anio_requiere = $fecha_requiere[0];
 			$path = public_path();
-			$namefile = $path . '/uploads/Requisiciones/' . $data[0]->dependencia . '/' . substr($anio_elabora, -2) . '/' . $mes_elabora . '/' . $data[0]->no_requisicion . '/' . $data[0]->no_requisicion . '_req.pdf';
+			//$namefile = $path . '/uploads/Requisiciones/' . $data[0]->dependencia . '/' . substr($anio_elabora, -2) . '/' . $mes_elabora . '/' . $data[0]->no_requisicion . '/' . $data[0]->no_requisicion . '_req.pdf';
 
-			if (file_exists($namefile) == true) {
+			/*if (file_exists($namefile) == true) {
 				$adjunto = $data[0]->no_requisicion . '_req.pdf';
 				//dd($adjunto);
 			} else {
 				$adjunto = '';
-			}
+			}*/
 
 			if ($data == null) {
 				return redirect('/')->with('error', 'El folio no se ha encontrado.');
@@ -418,19 +422,20 @@ class RequisicionesController extends Controller {
 				return $namePath;
 
 			}
-			//dd($data2);
+
 			$pdf = PDF::loadView('reportes.pdf.form_requisiciones_solicita', ['data' => $data], compact('dia_elabora', 'mes_elabora', 'anio_elabora', 'dia_requiere', 'mes_requiere', 'anio_requiere', 'user', 'tipo', 'data2'))->setPaper('A4', 'portrait')->setWarnings(false)->stream();
 
-			$path = Storage::disk('local')->put($namePath, $pdf);
+		/*	$path = Storage::disk('local')->put($namePath, $pdf);
 			if ($path && Storage::disk('local')->exists($namePath)) {
-
 				return $namePath;
 			} else {
 				return redirect('/')->with('error', 'Intenta nuevamente.');
-			}
+			}*/
+      //dd(1);
 			break;
 
 		case 0:
+  
 			$data = DB::select('select * ,cat_unidadalm.descripcion as uni_des
                                            ,ct.descripcion as ct_descripcion,
                                            cat_parpretotal.descripcion as par_descripcion
@@ -723,24 +728,24 @@ class RequisicionesController extends Controller {
 		//dd($response);
 		$response = json_decode($response);
 		$err = curl_error($curl);
-		//dd($err);
+
 		#Se cierra el recurso cURL y se liberan recursos del sistema.
 
 		curl_close($curl);
 
 		#Saco informacion del arreglo y la asigno a variables para pasarlas a la siguiente función
 		$err = $response->error->code;
-		if ($err == 0) {
-			$cadenaOriginal = $response->data->cadenaOriginal;
-			$folioConsulta = $response->data->folioConsulta;
-			$fechaFirma = $response->data->fechaFirma;
-			$nombreCompleto = $response->data->nombreCompleto;
-			$sello = $response->data->sello;
-		} else {
-			return redirect()->back()->with('error', ' Error de conexión intenta nuevamente');
-		}
+		$cadenaOriginal = $response->data->cadenaOriginal;
+		$folioConsulta = $response->data->folioConsulta;
+		$fechaFirma = $response->data->fechaFirma;
+		$nombreCompleto = $response->data->nombreCompleto;
+		$sello = $response->data->sello;
+
 		#Validación de errores
 
+		if ($err != 0) {
+			return redirect()->back()->with('error', $sign['error']['msg'] . ' , verifica que tu certificado y contraseña sean validos.');
+		}
 		$path = $this->generatePDFfirmado($request->input('id'), $cadenaOriginal, $folioConsulta, $fechaFirma, $nombreCompleto, $sello, $status_req, $tipo);
 		//dd($path);
 		return \Redirect::route('data_signed', $path)->with('success', 'obtenido correctamente');
@@ -761,7 +766,7 @@ class RequisicionesController extends Controller {
 			$rfc = Auth::user()->rfc;
 			//dd($rfc);
 			$user = DB::select('select * from formatos_usuarios where rfc =:rfc ', ["rfc" => $rfc]);
-			//dd($data);
+			//dd($user);
 			$fecha_elabora = explode("-", $data[0]->fecha_elabora);
 			$fecha_requiere = explode("-", $data[0]->fecha_requiere);
 
@@ -1431,18 +1436,17 @@ class RequisicionesController extends Controller {
 
 		#Saco informacion del arreglo y la asigno a variables para pasarlas a la siguiente función
 		$err = $response->error->code;
-		if ($err == 0) {
-			$cadenaOriginal = $response->data->cadenaOriginal;
-			$folioConsulta = $response->data->folioConsulta;
-			$fechaFirma = $response->data->fechaFirma;
-			$nombreCompleto = $response->data->nombreCompleto;
-			$sello = $response->data->sello;
-		} else {
-			return redirect()->back()->with('error', ' Error de conexión intenta nuevamente');
-		}
+		$cadenaOriginal = $response->data->cadenaOriginal;
+		$folioConsulta = $response->data->folioConsulta;
+		$fechaFirma = $response->data->fechaFirma;
+		$nombreCompleto = $response->data->nombreCompleto;
+		$sello = $response->data->sello;
 
 		#Validación de errores
 
+		if ($err != 0) {
+			return redirect()->back()->with('error', $sign['error']['msg'] . ' , verifica que tu certificado y contraseña sean validos.');
+		}
 		$path = $this->generatePDFfirmadoCotizacion($request->input('id'), $cadenaOriginal, $folioConsulta, $fechaFirma, $nombreCompleto, $sello, $status_req);
 		//dd($path);
 		return \Redirect::route('data_cotizacion_signed', $path)->with('success', 'obtenido correctamente');
@@ -1568,13 +1572,11 @@ class RequisicionesController extends Controller {
 		return view('layouts/rechazado', ['id' => $request['id'], 'status_req' => $request['status_req'], 'tipo' => $request['tipo']]);
 	}
 	public function saverechazado(Request $request) {
-		//dd($request->all());
 
 		if ($request['tipo'] == 'TR') {
 			$rechazado = DB::table('requisiciones')
 				->where('no_requisicion', $request['id'])
 				->update(['status' => false, 'status_req' => '5', 'motivo' => strtoupper($request['motivo'])]);
-			//$Usuario = DB::table('users')->where('rfc', $RfcUsuario)
 			return redirect('/requisiciones/reqTramitar');
 		}
 
@@ -1592,15 +1594,14 @@ class RequisicionesController extends Controller {
 		}
 	}
 	public function selected(Request $request) {
-		$data = $request->except('_token', 'status_req', 'tipo', 'no_requisicion', 'solicita', 'textarea', 'usr_rechazo');
+		$data = $request->except('_token', 'status_req', 'tipo');
 		//dd($data);
 		if ($data == NULL) {
 			return redirect()->back()->with('error', 'No selecciono ningun registro para firmar.');
 		}
 		$status_req = $request->status_req;
-		//dd($status_req);
 		$tipo = $request->tipo;
-		//dd($tipo);
+
 		//dd($data);
 		$this->signedmasive($data, $status_req, $tipo);
 		return redirect()->back()->with('msg', 'Requisiciones firmadas exitosamente!!!');
@@ -1637,12 +1638,11 @@ class RequisicionesController extends Controller {
                                            ,cat_unidadalm.descripcion as uni_des
                                            ,ct.descripcion as ct_descripcion
                                            from requisiciones as r
-									       inner join requisiciones_bienes as rb  on rb.no_requisicion = r.no_requisicion
-										   inner join cat_cabmstotal as ct on rb.id_cabmsgrp = ct.cabms
-										   left join cat_par_pre as cat_par_pre on cat_par_pre.par_pre = r.par_pre
-										   inner join cat_unidadalm as cat_unidadalm on rb.unidad = cat_unidadalm.id
-									       and r.no_requisicion =:id', ["id" => $id]));
-
+         inner join requisiciones_bienes as rb  on rb.no_requisicion = r.no_requisicion
+    inner join cat_cabmstotal as ct on rb.id_cabmsgrp = ct.cabms
+    left join cat_par_pre as cat_par_pre on cat_par_pre.par_pre = r.par_pre
+    inner join cat_unidadalm as cat_unidadalm on rb.unidad = cat_unidadalm.id
+            and r.no_requisicion =:id', ["id" => $id]));
 				$cadena_remplace = substr_replace($collect . '||', '||', 0, 0);
 
 				$cadena_implode = implode('|', (array) $cadena_remplace);
@@ -1700,7 +1700,6 @@ class RequisicionesController extends Controller {
 				#Se cacha la respuesta y el error si es que existiera en cuestiones de conectividad
 
 				$response = curl_exec($curl);
-
 				#El resultado lo decodifico a un Json para poder extraer los valores del arreglo
 
 				$response = json_decode($response);
@@ -1713,16 +1712,17 @@ class RequisicionesController extends Controller {
 
 				#Saco informacion del arreglo y la asigno a variables para pasarlas a la siguiente función
 				$err = $response->error->code;
-				if ($err == 0) {
-					$cadenaOriginal = $response->data->cadenaOriginal;
-					$folioConsulta = $response->data->folioConsulta;
-					$fechaFirma = $response->data->fechaFirma;
-					$nombreCompleto = $response->data->nombreCompleto;
-					$sello = $response->data->sello;
-				} else {
-					return redirect()->back()->with('error', ' Error de conexión intenta nuevamente');
-				}
+				$cadenaOriginal = $response->data->cadenaOriginal;
+				$folioConsulta = $response->data->folioConsulta;
+				$fechaFirma = $response->data->fechaFirma;
+				$nombreCompleto = $response->data->nombreCompleto;
+				$sello = $response->data->sello;
+
 				#Validación de errores
+
+				if ($err != 0) {
+					return redirect()->back()->with('error', $sign['error']['msg'] . ' , verifica que tu certificado y contraseña sean validos.');
+				}
 
 				$path = $this->generatePDFfirmado($id, $cadenaOriginal, $folioConsulta, $fechaFirma, $nombreCompleto, $sello, $status_req, $tipo);
 			}
@@ -1734,8 +1734,7 @@ class RequisicionesController extends Controller {
 
 		$requisicion = DB::select('select * ,cat_unidadalm.descripcion as uni_des
                                            ,ct.descripcion as ct_descripcion,
-                                           cat_parpretotal.descripcion as par_descripcion,
-										   rb.id as id_req_bien
+                                           cat_parpretotal.descripcion as par_descripcion
                                            from requisiciones as r
                                            inner join requisiciones_bienes as rb  on rb.no_requisicion = r.no_requisicion
                                            inner join cat_cabmstotal as ct on rb.id_cabmsgrp = ct.cabms
@@ -1763,22 +1762,11 @@ class RequisicionesController extends Controller {
 		}
 	}
 
-	public function cancelados($noReq) {
+ 
 
-		$cancelados = DB::select('select * ,cat_unidadalm.descripcion as uni_des
-                                           ,ct.descripcion as ct_descripcion,
-                                           cat_parpretotal.descripcion as par_descripcion,
-																					 rb.id as id_req_bien
-                                           from requisiciones as r
-                                           inner join requisiciones_bienes as rb  on rb.no_requisicion = r.no_requisicion
-                                           inner join cat_cabmstotal as ct on rb.id_cabmsgrp = ct.cabms
-                                           left join cat_parpretotal as cat_parpretotal on cat_parpretotal.par_pre = r.par_pre
-                                           inner join cat_unidadalm as cat_unidadalm on rb.unidad = cat_unidadalm.id
-																					 inner join users as users_name on users_name.id = r.usr_solicita
-                                           and r.no_requisicion =:id', ["id" => $noReq]);
-		//dd($cancelados);
-		return response()->json(["cancelados" => $cancelados]);
-
+  // FORMULARIO DE PRUPUESTA - ANEXO TÉCNICO DE BIENES
+  public function formAnexo() 
+  {
+		return view('requisiciones.formAnexo');
 	}
-
 }

@@ -7,7 +7,7 @@
     <meta name="description" content="Updates and statistics">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Sistema | General</title>
-    <link rel="icon" type="image/vnd.microsoft.icon" href="{{ asset('assets/media/logos/favicon.ico') }}" sizes="48X16">
+  
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700|Roboto:300,400,500,600,700">
     @include('layouts/css/css')
     @yield('styles')  
@@ -19,7 +19,7 @@
     <div id="kt_header_mobile" class="kt-header-mobile  kt-header-mobile--fixed ">
         <div class="kt-header-mobile__logo">
             <a href="demo1/index.html">
-                <img alt="Logo" src="{{ URL::asset('assets/media/logos/logo-light.png')}}" />
+            
             </a>
         </div>
         <div class="kt-header-mobile__toolbar">

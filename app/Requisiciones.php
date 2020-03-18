@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Requisiciones extends Model
 {
-    protected $table = 'requisiciones';
+    protected $table = 'requisiciones_new';
 
     protected $fillable = [
 

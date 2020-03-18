@@ -23,9 +23,65 @@ var KTLoginGeneral = function() {
     return {
         init: function() {
 
-            n(), $("#kt_login_signup_submit").click(function(e) {
+            n(), $("#kt_login_signin_submit").click(function(t) {
+                t.preventDefault();
+                var e = $(this),
+                    n = $(this).closest("form");
+                n.validate({
+                    onfocusout: false,
+                    onkeyup: false,
+                    onclick: false,
+                    rules: {
+                        email: {
+                            required: true,
+                            email: !0
+
+                        },
+                        username: {
+                            required: true,
+
+                        },
+                        password: {
+                            required: !0
+                        }
+                    },
+                    messages: {
+                        email: "Escribe un correo valido",
+                        username: "Usuario requerido.",
+                        password: "Contraseña requerida.",
+                    }
+                }), n.valid() && (e.addClass("kt-spinner kt-spinner--right kt-spinner--sm kt-spinner--light").attr("disabled", !0),
+                    n.ajaxSubmit({
+                    url: "login",
+                    type: 'POST',
+                    cache: false,
+                    //dataType: 'json',
+                    data: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function (data) {
+                        console.log(data.success);
+                        if (data.success == true) {
+                            if (data.admin == true) {
+                                //console.log('es adminisitrador');
+                                window.location.href = "admin";
+                            } else {
+                               // console.log('es area normal');
+                                   window.location.href = "home";
+                            }
+                        } else {
+                            e.removeClass("kt-spinner kt-spinner--right kt-spinner--sm kt-spinner--light").attr("disabled", !1),
+                                i(n, "danger", "Usuario o contraseña incorrectos. Por favor intenta nuevamente.")
+                        }
+                    },
+                    error: function() {
+                        e.removeClass("kt-spinner kt-spinner--right kt-spinner--sm kt-spinner--light").attr("disabled", !1),
+                        i(n, "danger", "Error al validar el usuario. Intente mas tarde.")
+                    }
+                }))
+            }), $("#kt_login_signup_submit").click(function(n) {
                 var message = '';
-                e.preventDefault();
+                n.preventDefault();
                 var token = $('#_token').val();
                 var s = $(this),
                     r = $(this).closest("form");
@@ -34,16 +90,16 @@ var KTLoginGeneral = function() {
                     onkeyup: false,
                     onclick: false,
                     rules: {
-                        rrfc: {
+                        remail: {
                             required: true,
-                            rfc: !0,
+                            email: !0,
                                     remote: {
                                         headers: {
                                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                                         },
                                         url: url+'users/validEmail', type: 'POST', cache: false, dataType: 'json', data: {
                                             remail: function() {
-                                                return $('#rrfc').val();
+                                                return $('#remail').val();
                                             }
                                         },
                                         dataFilter: function(response) {
@@ -136,12 +192,12 @@ var KTLoginGeneral = function() {
                             console.log('es falso');
                        // Swal.fire('El Correo ya existe!','Verifique el correo','error');
                          s.removeClass("kt-spinner kt-spinner--right kt-spinner--sm kt-spinner--light").attr("disabled", !1)
-                        , i(r, "danger", "Este RFC ya se encuentra registrado en el sistema, por favor verifica la información"),
+                        , i(r, "danger", "Verifique el correo Ingresado ya que ese correo esta registrado, si tiene acceso a ese correo solicite el cambio de contraseña"),
                           e();
                         }
                         else{
                             console.log('es verdadedo');
-                           Swal.fire('¡Aviso!','Las instrucciones se han enviado a su correo.','warning');
+                         //  Swal.fire('Correo!','Correo enviado','warning');
                              s.removeClass("kt-spinner kt-spinner--right kt-spinner--sm kt-spinner--light").attr("disabled", !1), r.clearForm(), r.validate().resetForm(), e();
                             var n = t.find(".kt-login__signin form");
                             n.clearForm(), n.validate().resetForm(), i(n, "success", "Las instrucciones se han enviado a su correo.")

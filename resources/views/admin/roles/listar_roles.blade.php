@@ -8,7 +8,7 @@
             </span>
             <h3 class="kt-portlet__head-title">
                Control de Roles y Permisos asignados
-            </h3>
+            </h3> 
         </div>
         <div class="kt-portlet__head-toolbar">
             <div class="kt-portlet__head-wrapper">
