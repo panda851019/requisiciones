@@ -163,7 +163,7 @@ return [
 		Illuminate\View\ViewServiceProvider::class,
 		Spatie\Permission\PermissionServiceProvider::class,
 		Collective\Html\HtmlServiceProvider::class,
-		Yajra\DataTables\DataTablesServiceProvider::class,
+		//Yajra\DataTables\DataTablesServiceProvider::class,
 
 		//Yajra\Oci8\Oci8ServiceProvider::class,
 
